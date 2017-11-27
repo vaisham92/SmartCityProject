@@ -1,0 +1,62 @@
+#divLoading
+{
+  display : none;
+}
+#divLoading.show
+{
+  display : block;
+  position : fixed;
+  z-index: 100;
+  background-image : url('/public/images/9.gif');
+  background-color:#666;
+  opacity : 0.4;
+  background-repeat : no-repeat;
+  background-position : center;
+  left : 0;
+  bottom : 0;
+  right : 0;
+  top : 0;
+}
+
+.js div#preloader {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  background: #333 url('http://files.mimoymima.com/images/loading.gif') no-repeat center center;
+}
+
+/*
+background-image : url('http://loadinggif.com/images/image-selection/3.gif');
+ */
+
+.jumbotron {
+  background: #532F8C;
+  color: white;
+  padding-bottom: 80px; }
+  .jumbotron .btn-primary {
+    background: #845ac7;
+    border-color: #845ac7; }
+    .jumbotron .btn-primary:hover {
+      background: #7646c1; }
+  .jumbotron p {
+    color: #d9ccee;
+    max-width: 75%;
+    margin: 1em auto 2em; }
+  .navbar + .jumbotron {
+    margin-top: -20px; }
+  .jumbotron .lang-logo {
+    display: block;
+    background: #B01302;
+    border-radius: 50%;
+    overflow: hidden;
+    width: 100px;
+    height: 100px;
+    margin: auto;
+    border: 2px solid white; }
+    .jumbotron .lang-logo img {
+      max-width: 100%; }
+
