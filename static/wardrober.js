@@ -10,9 +10,6 @@ wardroberapp.config(['$routeProvider', '$locationProvider',
             .when('/', {
                 templateUrl: '../static/search.html',
                 controller: 'searchController'
-            }).when('/graph', {
-                templateUrl: '../static/graph.html',
-                controller: 'graphController'
             }).when('/community', {
                 templateUrl: '../static/community.html',
                 controller: 'communityController'
