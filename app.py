@@ -1,9 +1,13 @@
 from flask import Flask, send_file, jsonify
+from flask import request
 from igraph import *
 from ResponseBuilder import *
+import json
 
 app = Flask(__name__)
 
+interest_based_community_graph = Graph()
+interest_based_community_graph.to_directed()
 
 def load_graph():
     graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Dataset/DS_Ver5.gml")
@@ -67,43 +71,52 @@ def get_school_communities():
 # Interest based community detection
 @app.route('/api/interest-based-community', methods=['GET'])
 def get_interest_based_communities():
-
-    interest_based_community = Graph()
-    interest_based_community.to_directed()
-
-    nodes_list = []
+    #query = request.data
+    #query = json.loads(query)
+    #school =  query['school']
+    #interests = query['interests']
+    school = 'sjsu'
+    interests = 'sports'
+    school_nodes_list = []
 
     for v in d_social_network_graph.vs:
-        if v["school"] == "SJSU":
-            interest_based_community.add_vertex(v.index)
-            nodes_list.append(v)
+        if v["school"] == str(school).upper():
+            interest_based_community_graph.add_vertex(v.index)
+            school_nodes_list.append(v)
 
     i = 0
-    for v in interest_based_community.vs:
-        v["id"] = nodes_list[i]["id"]
+    for v in interest_based_community_graph.vs:
+        v["id"] = school_nodes_list[i]["id"]
         v["groupId"] = -1
         v['interestedNode']=False
         v['influentialNode']=False
-        v["interest"] = nodes_list[i]["interest"]
+        v["interest"] = school_nodes_list[i]["interest"]
         i += 1
 
     for e in d_social_network_graph.es:
         source = e.source
         destination = e.target
-        if d_social_network_graph.vs[source]["school"] == "SJSU" and d_social_network_graph.vs[destination][
-            "school"] == "SJSU":
-            interest_based_community.add_edge(source, destination)
+        if d_social_network_graph.vs[source]["school"] == str(school).upper() and d_social_network_graph.vs[destination][
+            "school"] == str(school).upper():
+            interest_based_community_graph.add_edge(source, destination)
 
     interested_nodes_list = []
 
-    for v in interest_based_community.vs:
-        if "sports" in v["interest"]:
+    for v in interest_based_community_graph.vs:
+        isInterested = False
+        for interest in interests:
+            if interest in v["interest"]:
+                isInterested = True
+            else:
+                isInterested = False
+                break
+        if isInterested:
             v["interestedNode"] = True
             interested_nodes_list.append(v)
 
     response_builder = ResponseBuilder()
-    nodes = response_builder.return_node_list(interest_based_community)
-    edges = response_builder.return_edge_list(interest_based_community)
+    nodes = response_builder.return_node_list(interest_based_community_graph)
+    edges = response_builder.return_edge_list(interest_based_community_graph)
 
     response = dict()
     response["nodes"] = nodes
