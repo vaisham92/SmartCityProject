@@ -6,14 +6,15 @@ import json
 
 app = Flask(__name__)
 
+school_community_graph = Graph()
+school_community_graph.to_directed()
+
 interest_based_community_graph = Graph()
 interest_based_community_graph.to_directed()
 
-sub_community_graph = Graph()
-sub_community_graph.to_directed()
 
 def load_graph():
-    graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Dataset/DS_Ver5.gml")
+    graph = Graph.Read_GML("/Users/ChandanaRao/Desktop/ChandanaRao/SJSU/Academics/Sem4/CMPE295/Dataset/DS_Ver5.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
@@ -43,7 +44,7 @@ def get_graph():
 
 
 @app.route('/showSignUp')
-def showSignUp():
+def show_sign_up():
     return send_file('signup.html')
 
 
@@ -52,9 +53,9 @@ def showSignUp():
 def get_school_communities():
     u_social_network_graph = d_social_network_graph
     u_social_network_graph.to_undirected()
-    school_community_graph = u_social_network_graph.community_multilevel()
+    multi_school_community_graph = u_social_network_graph.community_multilevel()
 
-    for idx, community in enumerate(school_community_graph):
+    for idx, community in enumerate(multi_school_community_graph):
         for node in community:
             v = d_social_network_graph.vs[node]
             v["groupId"] = idx
@@ -67,7 +68,6 @@ def get_school_communities():
     response["nodes"] = nodes
     response['edges'] = edges
 
-
     return jsonify(response)
 
 
@@ -78,53 +78,54 @@ def get_interest_based_communities():
     #query = json.loads(query)
     #school =  query['school']
     #interests = query['interests']
+
     school = 'sjsu'
     interests = 'sports'
-    school_nodes_list = []
+
+    school_nodes = []
 
     for v in d_social_network_graph.vs:
         if v["school"] == str(school).upper():
-            interest_based_community_graph.add_vertex(v.index)
-            school_nodes_list.append(v)
+            school_community_graph.add_vertex(v.index)
+            school_nodes.append(v)
 
     i = 0
-    for v in interest_based_community_graph.vs:
-        v["id"] = school_nodes_list[i]["id"]
+    for v in school_community_graph.vs:
+        v["id"] = school_nodes[i]["id"]
         v["groupId"] = -1
         v['interestedNode']=False
         v['influentialNode']=False
-        v["interest"] = school_nodes_list[i]["interest"]
+        v["interest"] = school_nodes[i]["interest"]
         i += 1
 
     for e in d_social_network_graph.es:
-        source = e.source
-        destination = e.target
-        if d_social_network_graph.vs[source]["school"] == str(school).upper() and d_social_network_graph.vs[destination][
-            "school"] == str(school).upper():
-            interest_based_community_graph.add_edge(source, destination)
+        src = e.source
+        dest = e.target
+        if d_social_network_graph.vs[src]["school"] == str(school).upper() and d_social_network_graph.vs[dest]["school"] == str(school).upper():
+            school_community_graph.add_edge(src, dest)
 
-    interested_nodes_list = []
+    interested_nodes = []
 
-    for v in interest_based_community_graph.vs:
-        isInterested = False
+    for v in school_community_graph.vs:
+        is_interested = False
         for interest in interests:
             if interest in v["interest"]:
-                isInterested = True
+                is_interested = True
             else:
-                isInterested = False
+                is_interested = False
                 break
-        if isInterested:
+        if is_interested:
             v["interestedNode"] = True
-            interested_nodes_list.append(v)
+            interested_nodes.append(v)
 
     # Compute shortest paths among sub-community nodes usinf Dijkstra's shortest path algorithm
-    influenceFactorAdjGrid = d_social_network_graph.shortest_paths_dijkstra(interested_nodes_list, interested_nodes_list, None, OUT)
-    subCommunityGraph = Graph.Weighted_Adjacency(influenceFactorAdjGrid, ADJ_DIRECTED, "weight", False)
-    subCommunityGraph.simplify(combine_edges='sum')
+    influenceFactorAdjGrid = d_social_network_graph.shortest_paths_dijkstra(interested_nodes, interested_nodes, None, OUT)
+    interest_based_community_graph = Graph.Weighted_Adjacency(influenceFactorAdjGrid, ADJ_DIRECTED, "weight", False)
+    interest_based_community_graph.simplify(combine_edges='sum')
 
     response_builder = ResponseBuilder()
-    nodes = response_builder.return_node_list(interest_based_community_graph)
-    edges = response_builder.return_edge_list(interest_based_community_graph)
+    nodes = response_builder.return_node_list(school_community_graph)
+    edges = response_builder.return_edge_list(school_community_graph)
 
     response = dict()
     response["nodes"] = nodes
