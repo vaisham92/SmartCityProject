@@ -9,6 +9,9 @@ app = Flask(__name__)
 interest_based_community_graph = Graph()
 interest_based_community_graph.to_directed()
 
+sub_community_graph = Graph()
+sub_community_graph.to_directed()
+
 def load_graph():
     graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Dataset/DS_Ver5.gml")
     for node in graph.vs:
@@ -113,6 +116,11 @@ def get_interest_based_communities():
         if isInterested:
             v["interestedNode"] = True
             interested_nodes_list.append(v)
+
+    # Compute shortest paths among sub-community nodes usinf Dijkstra's shortest path algorithm
+    influenceFactorAdjGrid = d_social_network_graph.shortest_paths_dijkstra(interested_nodes_list, interested_nodes_list, None, OUT)
+    subCommunityGraph = Graph.Weighted_Adjacency(influenceFactorAdjGrid, ADJ_DIRECTED, "weight", False)
+    subCommunityGraph.simplify(combine_edges='sum')
 
     response_builder = ResponseBuilder()
     nodes = response_builder.return_node_list(interest_based_community_graph)
