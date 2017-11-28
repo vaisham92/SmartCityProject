@@ -3,34 +3,41 @@
  */
 wardroberapp.controller('searchController', function ($scope, $http, $location) {
     $scope.search = function() {
-        var query = {};
-        var queryString = $scope.queryString;
+        // var query = {};
+        // var queryString = $scope.queryString;
+        //
+        // var school = queryString.split(';');
+        // query['school'] = school[0];
+        // var interests = school[1].split(',');
+        // query['interests'] = interests;
 
-        var school = queryString.split(';');
-        query['school'] = school[0];
-        var interests = school[1].split(',');
-        query['interests'] = interests;
-
-        $http({
-			method : 'POST',
-			url : '/api/interest-based-community',
-			data : query,
-			headers : {
-					'Content-Type' : 'application/json'
-			}
-		}).success(function(data) {
-			if(data) {
-				window.location = '/community';
-			}
-			else {
-			}
-		});
+        //window.location = '/graph/community/' + query['school'] + '/' + getCommaSeparated(query['interests']);
     };
+
+    var getCommaSeparated = function(data) {
+    	var result = "";
+    	for(index in data) {
+    		result += data[index].trim() + ",";
+		}
+		return result.substring(0, result.length - 1);
+	};
+
+    var modifyNodes = function(data) {
+
+        // for(index in data.nodes) {
+    		// if(data.nodes[index].interestedNode)
+    		// 	data.nodes[index].group = 1;
+    		// else
+    		// 	data.nodes[index].group = 0;
+		// }
+		return data.nodes;
+
+	};
 
     $scope.visualize = function() {
     	var graphResponse = $http.get('/api/schoolCommunity');
 		graphResponse.success(function(response) {
-			var nodes = response.nodes;
+			var nodes = modifyNodes(response);
 			var edges = response.edges;
 			create_network_graph(nodes, edges);
 		});
@@ -45,19 +52,55 @@ wardroberapp.controller('searchController', function ($scope, $http, $location) 
 				edges: edges
 			};
 			var options = {
-				nodes: {
-					shape: 'dot',
-					size: 30,
-					font: {
-						size: 32,
-						color: '#000000'
-					},
-					borderWidth: 2
+				groups: {
+				failure: {
+				   color: {
+					  background: 'red'
+				   }
+				},
+				state: {
+				   color: {
+					  background: 'lime'
+				   }
+				},
+				startstate: {
+				   font: {
+					  size: 33,
+					  color: 'white'
+				   },
+				   color: {
+					  background: 'blueviolet'
+				   }
+				},
+				finalstate: {
+				   font: {
+					  size: 33,
+					  color: 'white'
+				   },
+				   color: {
+					  background: 'blue'
+				   }
+				}
 				},
 				edges: {
-					width: 2
+				arrows: {
+				   to: {
+					  enabled: true
+				   }
+			},
+			smooth: {
+			   enabled: false,
+				   type: 'continuous'
 				}
-			};
+			 },
+			physics: {
+					stabilization: false,
+				 },
+				 layout: {
+					randomSeed: 191006,
+					improvedLayout: true
+				 }
+  			};
 			network = new vis.Network(container, data, options);
 
 			network.on("click", function (params) {

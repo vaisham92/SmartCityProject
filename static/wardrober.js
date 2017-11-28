@@ -7,13 +7,14 @@ var wardroberapp = angular.module('wardroberapp', ['ngRoute']);
 wardroberapp.config(['$routeProvider', '$locationProvider',
     function ($routeProvider, $locationProvider, $routeParams, $location) {
         $routeProvider
-            .when('/', {
+            .when('/graph', {
                 templateUrl: '../static/search.html',
                 controller: 'searchController'
-            }).when('/community', {
+                // community/SJSU/school,sports
+            }).when('/graph/community/:school/:interests', {
                 templateUrl: '../static/community.html',
                 controller: 'communityController'
-            }).when('/influential', {
+            }).when('/graph/influential', {
                 templateUrl: '../static/influential.html',
                 controller: 'influentialController'
             })

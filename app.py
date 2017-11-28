@@ -14,7 +14,8 @@ interest_based_community_graph.to_directed()
 
 
 def load_graph():
-    graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Dataset/DS_Ver5.gml")
+
+    graph = Graph.Read_GML("/Users/vpathuri/Desktop/CODE/SmartCityProject/Dataset/graph.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
@@ -43,11 +44,6 @@ def get_graph():
     return jsonify(response)
 
 
-@app.route('/showSignUp')
-def show_sign_up():
-    return send_file('signup.html')
-
-
 # School community detection based on network structure
 @app.route('/api/schoolCommunity', methods=['GET'])
 def get_school_communities():
@@ -74,13 +70,12 @@ def get_school_communities():
 # Interest based community detection
 @app.route('/api/interest-based-community', methods=['GET'])
 def get_interest_based_communities():
-    #query = request.data
-    #query = json.loads(query)
-    #school =  query['school']
-    #interests = query['interests']
+    school =  request.args.get('school')
+    interests = request.args.get('interests')
+    interests = interests.split(',')
 
-    school = 'sjsu'
-    interests = ['sports','music']
+    # school = 'sjsu'
+    # interests = ['sports','music']
 
     school_nodes = []
 
@@ -89,6 +84,7 @@ def get_interest_based_communities():
             school_community_graph.add_vertex(v.index)
             school_nodes.append(v)
 
+    ## fix me - vaisham
     i = 0
     for v in school_community_graph.vs:
         v["id"] = school_nodes[i]["id"]
