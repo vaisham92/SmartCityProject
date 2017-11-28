@@ -6,16 +6,9 @@ import json
 
 app = Flask(__name__)
 
-school_community_graph = Graph()
-school_community_graph.to_directed()
-
-interest_based_community_graph = Graph()
-interest_based_community_graph.to_directed()
-
-
 def load_graph():
 
-    graph = Graph.Read_GML("/Users/vpathuri/Desktop/CODE/SmartCityProject/Dataset/graph.gml")
+    graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Python/CMPE295/100Node/graph_100.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
@@ -72,19 +65,24 @@ def get_school_communities():
 def get_interest_based_communities():
     school =  request.args.get('school')
     interests = request.args.get('interests')
-    interests = interests.split(',')
+    # interests = interests.split(',')
 
     # school = 'sjsu'
-    # interests = ['sports','music']
+    interests = ['sports']
 
     school_nodes = []
+
+    school_community_graph = Grap   h()
+    school_community_graph.to_directed()
+
+    interest_based_community_graph = Graph()
+    interest_based_community_graph.to_directed()
 
     for v in d_social_network_graph.vs:
         if v["school"] == str(school).upper():
             school_community_graph.add_vertex(v.index)
             school_nodes.append(v)
 
-    ## fix me - vaisham
     i = 0
     for v in school_community_graph.vs:
         v["id"] = school_nodes[i]["id"]
