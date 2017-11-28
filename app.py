@@ -72,7 +72,7 @@ def get_interest_based_communities():
 
     school_nodes = []
 
-    school_community_graph = Grap   h()
+    school_community_graph = Graph()
     school_community_graph.to_directed()
 
     interest_based_community_graph = Graph()
