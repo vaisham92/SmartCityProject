@@ -14,7 +14,7 @@ interest_based_community_graph.to_directed()
 
 
 def load_graph():
-    graph = Graph.Read_GML("/Users/ChandanaRao/Desktop/ChandanaRao/SJSU/Academics/Sem4/CMPE295/Dataset/DS_Ver5.gml")
+    graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Dataset/DS_Ver5.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
@@ -80,7 +80,7 @@ def get_interest_based_communities():
     #interests = query['interests']
 
     school = 'sjsu'
-    interests = 'sports'
+    interests = ['sports','music']
 
     school_nodes = []
 
@@ -118,10 +118,17 @@ def get_interest_based_communities():
             v["interestedNode"] = True
             interested_nodes.append(v)
 
+
     # Compute shortest paths among sub-community nodes usinf Dijkstra's shortest path algorithm
     influenceFactorAdjGrid = d_social_network_graph.shortest_paths_dijkstra(interested_nodes, interested_nodes, None, OUT)
     interest_based_community_graph = Graph.Weighted_Adjacency(influenceFactorAdjGrid, ADJ_DIRECTED, "weight", False)
     interest_based_community_graph.simplify(combine_edges='sum')
+
+    i = 0
+    for v in interest_based_community_graph.vs:
+        node = interested_nodes[i]
+        v["id"] = node["id"]
+        i += 1
 
     response_builder = ResponseBuilder()
     nodes = response_builder.return_node_list(school_community_graph)
@@ -132,7 +139,6 @@ def get_interest_based_communities():
     response['edges'] = edges
 
     return jsonify(response)
-
 
 if __name__ == "__main__":
     app.run(port=5000)
