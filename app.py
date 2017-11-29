@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 def load_graph():
 
-    graph = Graph.Read_GML("/Users/vpathuri/Desktop/CODE/SmartCityProject/Dataset/graph.gml")
+    graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Python/SmartCityProject/Dataset/graph.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
@@ -89,8 +89,8 @@ def get_interest_based_communities():
     interests = request.args.get('interests')
     interests = interests.split(',')
 
-    # school = 'sjsu'
-    # interests = ['sports']
+    #school = 'sjsu'
+    #interests = ['sports','music']
 
     school_nodes = []
 
@@ -147,8 +147,9 @@ def get_interest_based_communities():
         i += 1
 
     influentials_object = get_influential_node(interest_based_community_graph, school_community_graph)
-    for node_id in influentials_object[len(influentials_object)-1][2]:
-        node_id["influentialNode"] = True
+    if len(influentials_object) > 0:
+        for node_id in influentials_object[len(influentials_object)-1][2]:
+            node_id["influentialNode"] = True
 
     response_builder = ResponseBuilder()
     nodes = response_builder.return_node_list(school_community_graph)
