@@ -1,17 +1,17 @@
 /**
  * Created by Student on 5/18/17.
  */
-wardroberapp.controller('searchController', function ($scope, $http, $location) {
+wardroberapp.controller('searchController', function ($scope, $http, $location, $window) {
     $scope.search = function() {
-        // var query = {};
-        // var queryString = $scope.queryString;
-        //
-        // var school = queryString.split(';');
-        // query['school'] = school[0];
-        // var interests = school[1].split(',');
-        // query['interests'] = interests;
+        var query = {};
+        var queryString = $scope.queryString;
 
-        //window.location = '/graph/community/' + query['school'] + '/' + getCommaSeparated(query['interests']);
+        var school = queryString.split(';');
+        query['school'] = school[0];
+        var interests = school[1].split(',');
+        query['interests'] = interests;
+
+        $location.url('/community/' + query['school'] + '/' + getCommaSeparated(query['interests']));
     };
 
     var getCommaSeparated = function(data) {

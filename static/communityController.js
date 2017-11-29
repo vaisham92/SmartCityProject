@@ -1,21 +1,11 @@
 wardroberapp.controller('communityController', function ($scope, $http, $location, $routeParams) {
 
-    function getUrlParameter(param, dummyPath) {
-        var sPageURL = dummyPath || window.location.search.substring(1),
-            sURLVariables = sPageURL.split(/[&||?]/),
-            res;
+    $scope.redirectToInfluential = function() {
+        var school = $routeParams.school;
+        var interests = $routeParams.interests;
 
-        for (var i = 0; i < sURLVariables.length; i += 1) {
-            var paramName = sURLVariables[i],
-                sParameterName = (paramName || '').split('=');
-
-            if (sParameterName[0] === param) {
-                res = sParameterName[1];
-            }
-        }
-
-        return res;
-    }
+        $location.url('/community/' + query['school'] + '/' + getCommaSeparated(query['interests']));
+    };
 
     var modifyNodes = function(data) {
 

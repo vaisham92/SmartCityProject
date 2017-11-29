@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 def load_graph():
 
-    graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Python/CMPE295/360Nodes/graph.gml")
+    graph = Graph.Read_GML("/Users/vpathuri/Desktop/CODE/SmartCityProject/Dataset/graph.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
