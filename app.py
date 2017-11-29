@@ -2,13 +2,14 @@ from flask import Flask, send_file, jsonify
 from flask import request
 from igraph import *
 from ResponseBuilder import *
-import json
+import louvain
+import igraph as ig
 
 app = Flask(__name__)
 
 def load_graph():
 
-    graph = Graph.Read_GML("/PersonalFiles/MSSE/MasterProject/Python/SmartCityProject/Dataset/graph.gml")
+    graph = Graph.Read_GML("/Users/ChandanaRao/Desktop/ChandanaRao/SJSU/Academics/Sem4/CMPE295/Code/Python/SmartCityProject/Dataset/graph.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
@@ -40,10 +41,9 @@ def get_graph():
 # School community detection based on network structure
 @app.route('/api/schoolCommunity', methods=['GET'])
 def get_school_communities():
-    u_social_network_graph = d_social_network_graph
-    u_social_network_graph.to_undirected()
-    multi_school_community_graph = u_social_network_graph.community_multilevel()
-
+    multi_school_community_graph = louvain.find_partition(d_social_network_graph, louvain.CPMVertexPartition,
+                                       resolution_parameter=0.0005)
+    print len(multi_school_community_graph)
     for idx, community in enumerate(multi_school_community_graph):
         for node in community:
             v = d_social_network_graph.vs[node]
