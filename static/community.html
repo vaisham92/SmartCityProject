@@ -1,27 +1,70 @@
 <div class="container">
   <style>
     #communityGraph {
-      width: 800px;
+      width: 100%;
       height: 800px;
       background-color: #FFFFFF;
     }
   </style>
+    <div class="row">
+        <p class="h5">Influential Node graph</p> <br>
+        <p><small>Nodes in yellow are influential nodes</small></p>
+    </div>
   <div class="row">
-    <div class="col-md-9">
-      <div class="row">
-        <div class="w3-panel w3-card">
+    <div class="col-md-12">
+      <div class="row card">
+        <div class="card-body">
           <div id="communityGraph"></div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="row"><br></div>
-      <div class="row"><br></div>
-      <div class="row"><br></div>
-      <div class="row"><br></div>
-      <div class="row">
-        <button type="button" class="btn btn-primary" ng-click="redirectToInfluential()">Detect Influential Nodes</button>
-      </div>
-    </div>
   </div>
+    <div class="row">
+        <br>
+    </div>
+    <div class="row">
+        <div class="col-md-4">&nbsp</div>
+        <div class="col-md-8">
+            <button type="button" ng-click="influentialCoverage()" class="btn btn-primary">Show Influencer coverage</button>
+        </div>
+    </div>
+    <div class="row">
+        <br>
+    </div>
+    <div class="row">
+        <p class="h5">Influential Node Coverage</p> <br>
+    </div>
+    <style>
+        #chartdiv {
+            width		: 100%;
+            height		: 500px;
+            font-size	: 11px;
+        }
+    </style>
+    <div class="row card">
+        <div>
+            <div id="chartdiv"></div>
+        </div>
+    </div>
+    <div class="row">
+        <br>
+    </div>
+    <div class="row">
+        <p class="h5">Influential Nodes</p> <br>
+    </div>
+    <div class="row">
+       <div ng-repeat="node in nodes">
+           <div class="card col-md-6">
+              <img class="card-img-top" width="420" height="420" src="https://orig00.deviantart.net/f8d4/f/2015/105/0/7/goku_facebook_profil_by_mjd360-d8ps1sj.jpg" alt="Card image cap">
+              <div class="card-body">
+                <h4 class="card-title">Name: {{ node.firstname }}, {{ node.lastname }}</h4>
+                  <p class="card-text">DOB: {{ node.dob }}</p>
+                  <p class="card-text">Profession: {{ node.profession }}</p>
+                  <p class="card-text">School: {{ node.school }}</p>
+                  <p class="card-text">Interests: {{ node.interest }}</p>
+              </div>
+           </div>
+           <br>
+       </div>
+    </div>
 </div>

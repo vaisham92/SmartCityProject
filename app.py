@@ -59,16 +59,38 @@ def get_school_communities():
 
     return jsonify(response)
 
+@app.route('/api/nodeInfo', methods=['GET'])
+def get_node_info():
+
+    nodes = []
+    nodeIds = request.args.get('nodeIds')
+    nodeIds = nodeIds.split(',')
+
+    for nodeId in nodeIds:
+        node = d_social_network_graph.vs.select(lambda vertex:vertex["id"] == int(nodeId))[0]
+        nodeObject = dict()
+        nodeObject["firstname"] = node["firstname"]
+        nodeObject["lastname"] = node["lastname"]
+        nodeObject["dob"] = node["dob"]
+        nodeObject["school"] = node["school"]
+        nodeObject["profession"] = node["profession"]
+        nodeObject["interest"] = node["interest"]
+        nodes.append(nodeObject)
+
+    return jsonify(nodes)
+
+
+    pass
 
 # Interest based community detection
 @app.route('/api/interest-based-community', methods=['GET'])
 def get_interest_based_communities():
     school =  request.args.get('school')
     interests = request.args.get('interests')
-    # interests = interests.split(',')
+    interests = interests.split(',')
 
-    school = 'sjsu'
-    interests = ['sports']
+    # school = 'sjsu'
+    # interests = ['sports']
 
     school_nodes = []
 
@@ -124,23 +146,41 @@ def get_interest_based_communities():
         v["id"] = node["id"]
         i += 1
 
-    influential_list = get_influential_node(interest_based_community_graph, school_community_graph)
-    for node in school_community_graph.vs:
-        if node["id"] in influential_list:
-            node["influentialNode"] = True
+    influentials_object = get_influential_node(interest_based_community_graph, school_community_graph)
+    for node_id in influentials_object[len(influentials_object)-1][2]:
+        node_id["influentialNode"] = True
 
     response_builder = ResponseBuilder()
     nodes = response_builder.return_node_list(school_community_graph)
     edges = response_builder.return_edge_list(school_community_graph)
 
+    # Json object for coverage graph
+    nodes_coverage = []
+    for item in influentials_object:
+        temp_json = dict()
+        temp_json["no_of_influencers"] = item[0]
+        temp_json["coverage"] = item[1]
+        temp_json["node_info"] = []
+        for node in item[2]:
+            curr_node = dict()
+            curr_node["id"] = node["id"]
+            curr_node["interest"] = node["interest"]
+            curr_node["influentialNode"] = node["influentialNode"]
+            curr_node["groupId"] = node["groupId"]
+            curr_node["influence"] = node["influence"]
+            curr_node["interestedNode"] = node["interestedNode"]
+            curr_node["name"] = node["name"]
+            temp_json["node_info"].append(curr_node)
+        nodes_coverage.append(temp_json)
+
     response = dict()
     response["nodes"] = nodes
     response['edges'] = edges
+    response['coverageObject'] = nodes_coverage
 
     return jsonify(response)
 
 def get_influential_node(interest_based_community_graph, school_community_graph):
-    #plot(interest_based_community_graph)
     node_list = []
     edge_list = []
     for i in range(0, len(interest_based_community_graph.vs)):
@@ -172,11 +212,11 @@ def get_influential_node(interest_based_community_graph, school_community_graph)
         node["pagerank"] = node.pagerank()
         node["degree"] = node.indegree()
         node["influence"] = node["betweenness"] + node["pagerank"] + node["degree"]
+        school_community_graph.vs.select(lambda vertex: vertex["id"] == node["id"])[0]["influence"] = node["influence"]
         influencer_list.append(node)
     sort_nodes(influencer_list)
 
     # Calculating the coverage
-    print len(influencer_list)
     return get_coverage(node_list, influencer_list, school_community_graph)
 
 def get_coverage(node_list, influencer_list, school_community_graph):
@@ -186,6 +226,7 @@ def get_coverage(node_list, influencer_list, school_community_graph):
     leader_nodes = set()
     follower_nodes = set()
     coverage_grid = school_community_graph.shortest_paths(school_community_graph.vs, school_community_graph.vs, None, OUT)
+    resultObject = []
     while no_of_influencers < len(influencer_list) and coverage < 100.0:
         no_of_influencers += 1
         for i in range(0, no_of_influencers):
@@ -203,7 +244,11 @@ def get_coverage(node_list, influencer_list, school_community_graph):
                     follower_nodes.add(school_community_graph.vs.select(lambda vertex: vertex.index == i)[0]["id"])
             coverage = float((float(len(follower_nodes) + len(leader_nodes)) / float(len(school_community_graph.vs))) * 100.0)
             print "NoOfInfluencers: " + str(no_of_influencers) + " ; Coverage: " + str(coverage) + "; InfluentialNodes: " + str(leader_nodes) + "; FollowerNodes: " + str(follower_nodes) + "; TotalNodes: " + str(len(school_community_graph.vs))
-    return leader_nodes
+            x = []
+            for y in leader_nodes:
+                x.append(school_community_graph.vs.select(lambda vertex: vertex["id"] == y)[0])
+            resultObject.append([no_of_influencers, coverage, x])
+    return resultObject
     # while no_of_influencers < len(influencer_list) and coverage < 100.0:
     #     no_of_influencers += 1
     #     for i in range(0, no_of_influencers):
