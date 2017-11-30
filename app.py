@@ -3,13 +3,11 @@ from flask import request
 from igraph import *
 from ResponseBuilder import *
 import louvain
-import igraph as ig
 
 app = Flask(__name__)
 
 def load_graph():
-
-    graph = Graph.Read_GML("/Users/ChandanaRao/Desktop/ChandanaRao/SJSU/Academics/Sem4/CMPE295/Code/Python/SmartCityProject/Dataset/graph.gml")
+    graph = Graph.Read_GML("/Users/ChandanaRao/Desktop/ChandanaRao/SJSU/Academics/Sem4/CMPE295/Dataset/graph_500.gml")
     for node in graph.vs:
         node['groupId']=-1
         node['interestedNode']=False
@@ -43,7 +41,6 @@ def get_graph():
 def get_school_communities():
     multi_school_community_graph = louvain.find_partition(d_social_network_graph, louvain.CPMVertexPartition,
                                        resolution_parameter=0.0005)
-    print len(multi_school_community_graph)
     for idx, community in enumerate(multi_school_community_graph):
         for node in community:
             v = d_social_network_graph.vs[node]
@@ -61,7 +58,6 @@ def get_school_communities():
 
 @app.route('/api/nodeInfo', methods=['GET'])
 def get_node_info():
-
     nodes = []
     nodeIds = request.args.get('nodeIds')
     nodeIds = nodeIds.split(',')
@@ -76,49 +72,74 @@ def get_node_info():
         nodeObject["profession"] = node["profession"]
         nodeObject["interest"] = node["interest"]
         nodes.append(nodeObject)
-
     return jsonify(nodes)
-
-
-    pass
 
 # Interest based community detection
 @app.route('/api/interest-based-community', methods=['GET'])
 def get_interest_based_communities():
-    school =  request.args.get('school')
-    interests = request.args.get('interests')
-    interests = interests.split(',')
 
-    #school = 'sjsu'
-    #interests = ['sports','music']
+    target_school = request.args.get('school')
+    interests = request.args.get('interests').split(',')
 
-    school_nodes = []
+    # Level 1 - School Community Detection
+    multi_school_community_graph = louvain.find_partition(d_social_network_graph, louvain.CPMVertexPartition,
+                                                        resolution_parameter=0.0005)
+    school_community_id_map = {}
+    for community_id,community in enumerate(multi_school_community_graph):
+        min_check = len(community)*0.1
+        if min_check >= 1:
+            for i,node in enumerate(community):
+                school_name = d_social_network_graph.vs[node]['school']
+                if school_name in school_community_id_map:
+                    school_community_id_map[school_name] += ","+str(community_id)
+                else:
+                    school_community_id_map[school_name] = str(community_id)
+                i += 1
+                if i > min_check:
+                    break
 
+    for school, community_id in school_community_id_map.iteritems():
+        community_ids = community_id.split(",")
+        school_community_id_map[school] = max(set(community_ids), key=community_ids.count)
+
+    target_community_id = school_community_id_map.get(target_school)
+    school_nodes = multi_school_community_graph[int(target_community_id)]
+
+    # Level 2 Interest-based Community Detection
     school_community_graph = Graph()
     school_community_graph.to_directed()
 
     interest_based_community_graph = Graph()
     interest_based_community_graph.to_directed()
 
-    for v in d_social_network_graph.vs:
-        if v["school"] == str(school).upper():
-            school_community_graph.add_vertex(v.index)
-            school_nodes.append(v)
+    updated_school_nodes = []
 
-    i = 0
-    for v in school_community_graph.vs:
-        v["id"] = school_nodes[i]["id"]
+    for node in school_nodes:
+        school_community_graph.add_vertex(d_social_network_graph.vs[node].index)
+        updated_school_nodes.append(d_social_network_graph.vs[node])
+
+    updated_school_node_ids=[]
+
+    for i,v in enumerate(school_community_graph.vs):
+        v["id"] = updated_school_nodes[i]["id"]
+        v["label"] = updated_school_nodes[i]["label"]
         v["groupId"] = -1
         v['interestedNode']=False
         v['influentialNode']=False
-        v["interest"] = school_nodes[i]["interest"]
-        i += 1
+        v["interest"] = updated_school_nodes[i]["interest"]
+        updated_school_node_ids.append(updated_school_nodes[i]["id"])
 
     for e in d_social_network_graph.es:
         src = e.source
         dest = e.target
-        if d_social_network_graph.vs[src]["school"] == str(school).upper() and d_social_network_graph.vs[dest]["school"] == str(school).upper():
-            school_community_graph.add_edge(src, dest)
+        if d_social_network_graph.vs[src]['id'] in updated_school_node_ids \
+                and d_social_network_graph.vs[dest]['id'] in updated_school_node_ids:
+
+            id_src = d_social_network_graph.vs[src]['id']
+            id_dest = d_social_network_graph.vs[dest]['id']
+            sg_src = school_community_graph.vs.find(id=id_src).index
+            sg_dest = school_community_graph.vs.find(id=id_dest).index
+            school_community_graph.add_edge(sg_src, sg_dest)
 
     interested_nodes = []
 
@@ -181,6 +202,8 @@ def get_interest_based_communities():
 
     return jsonify(response)
 
+
+# Influential Node detection
 def get_influential_node(interest_based_community_graph, school_community_graph):
     node_list = []
     edge_list = []
@@ -220,6 +243,7 @@ def get_influential_node(interest_based_community_graph, school_community_graph)
     # Calculating the coverage
     return get_coverage(node_list, influencer_list, school_community_graph)
 
+# Influence coverage
 def get_coverage(node_list, influencer_list, school_community_graph):
     depth_threshold = 3
     no_of_influencers = 0
